@@ -37,9 +37,7 @@ import dev.jdtech.jellyfin.models.FindroidCollection
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidFolder
 import dev.jdtech.jellyfin.models.FindroidItem
-import android.content.Intent
 import dev.jdtech.jellyfin.models.FindroidAudiobook
-import org.jellyfin.sdk.model.api.BaseItemKind
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidShow
@@ -50,6 +48,7 @@ import dev.jdtech.jellyfin.presentation.film.FavoritesScreen
 import dev.jdtech.jellyfin.presentation.film.HomeScreen
 import dev.jdtech.jellyfin.presentation.film.LibraryScreen
 import dev.jdtech.jellyfin.presentation.film.MediaScreen
+import dev.jdtech.jellyfin.presentation.film.AudiobookScreen
 import dev.jdtech.jellyfin.presentation.film.MovieScreen
 import dev.jdtech.jellyfin.presentation.film.PersonScreen
 import dev.jdtech.jellyfin.presentation.film.SeasonScreen
@@ -97,6 +96,8 @@ data class LibraryRoute(
 @Serializable data object FavoritesRoute
 
 @Serializable data class MovieRoute(val movieId: String)
+
+@Serializable data class AudiobookRoute(val audiobookId: String)
 
 @Serializable data class ShowRoute(val showId: String)
 
@@ -382,6 +383,14 @@ fun NavigationRoot(
                     },
                 )
             }
+            composable<AudiobookRoute> { backStackEntry ->
+                val route: AudiobookRoute = backStackEntry.toRoute()
+                AudiobookScreen(
+                    audiobookId = UUID.fromString(route.audiobookId),
+                    navigateBack = { navController.safePopBackStack() },
+                    navigateHome = { navigateHome(navController) },
+                )
+            }
             composable<ShowRoute> { backStackEntry ->
                 val route: ShowRoute = backStackEntry.toRoute()
                 ShowScreen(
@@ -504,14 +513,8 @@ private fun navigateToItem(navController: NavHostController, item: FindroidItem)
                     libraryType = CollectionType.Folders,
                 )
             )
-        is FindroidAudiobook -> {
-            val context = navController.context
-            val intent = Intent(context, PlayerActivity::class.java)
-            intent.putExtra("itemId", item.id.toString())
-            intent.putExtra("itemKind", BaseItemKind.AUDIO_BOOK.serialName)
-            intent.putExtra("startFromBeginning", false)
-            context.startActivity(intent)
-        }
+        is FindroidAudiobook ->
+            navController.safeNavigate(AudiobookRoute(audiobookId = item.id.toString()))
         else -> Unit
     }
 }
