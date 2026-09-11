@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
+import dev.jdtech.jellyfin.models.FindroidAudiobook
 import dev.jdtech.jellyfin.models.FindroidCollection
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
@@ -20,6 +21,7 @@ import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.models.toFindroidCollection
 import dev.jdtech.jellyfin.models.toFindroidEpisode
 import dev.jdtech.jellyfin.models.toFindroidItem
+import dev.jdtech.jellyfin.models.toFindroidAudiobook
 import dev.jdtech.jellyfin.models.toFindroidMovie
 import dev.jdtech.jellyfin.models.toFindroidPerson
 import dev.jdtech.jellyfin.models.toFindroidSeason
@@ -83,6 +85,14 @@ class JellyfinRepositoryImpl(
                 .getItem(itemId, jellyfinApi.userId!!)
                 .content
                 .toFindroidMovie(this@JellyfinRepositoryImpl, database)
+        }
+
+    override suspend fun getAudiobook(itemId: UUID): FindroidAudiobook =
+        withContext(Dispatchers.IO) {
+            jellyfinApi.userLibraryApi
+                .getItem(itemId, jellyfinApi.userId!!)
+                .content
+                .toFindroidAudiobook(this@JellyfinRepositoryImpl, database)
         }
 
     override suspend fun getShow(itemId: UUID): FindroidShow =
