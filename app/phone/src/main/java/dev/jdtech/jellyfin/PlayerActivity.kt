@@ -27,6 +27,8 @@ import android.widget.ImageView
 import android.widget.Space
 import android.widget.TextView
 import androidx.activity.viewModels
+import android.Manifest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -60,6 +62,9 @@ class PlayerActivity : BasePlayerActivity() {
     lateinit var binding: ActivityPlayerBinding
     private var playerGestureHelper: PlayerGestureHelper? = null
     override val viewModel: PlayerViewModel by viewModels()
+
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
     private var previewScrubListener: PreviewScrubListener? = null
     private var wasZoom: Boolean = false
     private var skipButtonTimeoutExpired: Boolean = true
@@ -338,14 +343,28 @@ class PlayerActivity : BasePlayerActivity() {
             startFromBeginning = startFromBeginning,
         )
 
-        // For audiobooks, start the foreground MediaSessionService so playback has a
-        // media notification and survives fully leaving the app. Video never starts it.
+        // For audiobooks, ensure notification permission (Android 13+) so the media
+        // notification can display, then start the foreground MediaSessionService so
+        // playback has a notification and survives fully leaving the app. Video never
+        // starts the service.
         if (itemKind == BaseItemKind.AUDIO_BOOK.serialName) {
+            ensureNotificationPermission()
             val serviceIntent = Intent(this, AudiobookPlaybackService::class.java)
             ContextCompat.startForegroundService(this, serviceIntent)
         }
 
         hideSystemUI()
+    }
+
+    private fun ensureNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted =
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                    PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
