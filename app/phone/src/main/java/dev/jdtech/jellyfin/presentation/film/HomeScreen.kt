@@ -121,6 +121,16 @@ private fun HomeScreenLayout(state: HomeState, onAction: (HomeAction) -> Unit) {
                         )
                     }
                 }
+                state.listeningSection?.let { section ->
+                    item(key = section.id) {
+                        HomeSection(
+                            section = section.homeSection,
+                            itemsPadding = itemsPadding,
+                            onAction = onAction,
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                }
                 state.nextUpSection?.let { section ->
                     item(key = section.id) {
                         HomeSection(

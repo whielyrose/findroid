@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.film.R as FilmR
 import dev.jdtech.jellyfin.models.CollectionType
+import dev.jdtech.jellyfin.models.FindroidAudiobook
 import dev.jdtech.jellyfin.models.HomeItem
 import dev.jdtech.jellyfin.models.HomeSection
 import dev.jdtech.jellyfin.models.UiText
@@ -37,7 +38,11 @@ constructor(
     private val uuidNextUp =
         UUID(1783371395749072194, -6164625418200444295) // 18bfced5-f237-4d42-aa72-d9d7fed19279
 
+    private val uuidContinueListening =
+        UUID(4937169328197226116, -4704919157662094442) // distinct fixed id for listening row
     private val uiTextContinueWatching = UiText.StringResource(FilmR.string.continue_watching)
+    private val uiTextContinueListening =
+        UiText.StringResource(FilmR.string.continue_listening)
     private val uiTextNextUp = UiText.StringResource(FilmR.string.next_up)
 
     fun loadData() {
@@ -89,22 +94,37 @@ constructor(
     private suspend fun loadResumeItems() {
         Timber.i("Loading resume items")
         if (!appPreferences.getValue(appPreferences.homeContinueWatching)) {
-            _state.emit(_state.value.copy(resumeSection = null))
+            _state.emit(_state.value.copy(resumeSection = null, listeningSection = null))
             return
         }
 
         val resumeItems = repository.getResumeItems()
 
-        val section =
-            if (resumeItems.isEmpty()) {
+        // Split into video (Continue Watching) and audiobooks (Continue Listening).
+        val audiobookItems = resumeItems.filterIsInstance<FindroidAudiobook>()
+        val watchItems = resumeItems.filter { it !is FindroidAudiobook }
+
+        val watchSection =
+            if (watchItems.isEmpty()) {
                 null
             } else {
                 HomeItem.Section(
-                    HomeSection(uuidContinueWatching, uiTextContinueWatching, resumeItems)
+                    HomeSection(uuidContinueWatching, uiTextContinueWatching, watchItems)
                 )
             }
 
-        _state.emit(_state.value.copy(resumeSection = section))
+        val listenSection =
+            if (audiobookItems.isEmpty()) {
+                null
+            } else {
+                HomeItem.Section(
+                    HomeSection(uuidContinueListening, uiTextContinueListening, audiobookItems)
+                )
+            }
+
+        _state.emit(
+            _state.value.copy(resumeSection = watchSection, listeningSection = listenSection)
+        )
     }
 
     private suspend fun loadNextUpItems() {
