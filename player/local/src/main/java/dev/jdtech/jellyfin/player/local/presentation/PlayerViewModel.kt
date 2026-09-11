@@ -86,6 +86,9 @@ constructor(
 
     private val trackSelector = DefaultTrackSelector(application)
     var playWhenReady = true
+
+    /** True when the currently playing item is an audiobook — enables background playback. */
+    var isAudiobook = false
     private var currentMediaItemIndex = savedStateHandle["mediaItemIndex"] ?: 0
     private var playbackPosition: Long = savedStateHandle["position"] ?: 0
     private var currentMediaItemSegments: List<FindroidSegment> = emptyList()
@@ -174,6 +177,7 @@ constructor(
 
     fun initializePlayer(itemId: UUID, itemKind: String, startFromBeginning: Boolean) {
         player.addListener(this)
+        isAudiobook = BaseItemKind.fromName(itemKind) == BaseItemKind.AUDIO_BOOK
 
         viewModelScope.launch {
             val startItem =

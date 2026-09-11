@@ -15,7 +15,7 @@ abstract class BasePlayerActivity : AppCompatActivity() {
 
     abstract val viewModel: PlayerViewModel
 
-    private lateinit var mediaSession: MediaSession
+    private var mediaSession: MediaSession? = null
     private var wasPip: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +26,11 @@ abstract class BasePlayerActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        mediaSession = MediaSession.Builder(this, viewModel.player).build()
+        // Reuse an existing session (kept alive for audiobook background playback)
+        // instead of creating a duplicate.
+        if (mediaSession == null) {
+            mediaSession = MediaSession.Builder(this, viewModel.player).build()
+        }
     }
 
     override fun onResume() {
@@ -45,6 +49,10 @@ abstract class BasePlayerActivity : AppCompatActivity() {
 
         if (isInPictureInPictureMode) {
             wasPip = true
+        } else if (viewModel.isAudiobook) {
+            // Audiobooks keep playing in the background (screen off / pocket).
+            // Just checkpoint progress; do not pause.
+            viewModel.updatePlaybackProgress()
         } else {
             viewModel.playWhenReady = viewModel.player.playWhenReady
             viewModel.player.playWhenReady = false
@@ -55,7 +63,12 @@ abstract class BasePlayerActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
 
-        mediaSession.release()
+        // For audiobooks, keep the MediaSession alive so playback continues in the
+        // background with lock-screen controls. For video, release as normal.
+        if (!viewModel.isAudiobook) {
+            mediaSession?.release()
+            mediaSession = null
+        }
 
         if (wasPip) {
             finish()
