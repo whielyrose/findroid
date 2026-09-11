@@ -4,6 +4,7 @@ import android.app.AppOpsManager
 import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import org.jellyfin.sdk.model.api.BaseItemKind
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -93,6 +94,12 @@ class PlayerActivity : BasePlayerActivity() {
         val itemId = UUID.fromString(intent.extras!!.getString("itemId"))
         val itemKind = intent.extras!!.getString("itemKind")
         val startFromBeginning = intent.extras!!.getBoolean("startFromBeginning")
+
+        // Audiobooks are audio-only: allow the player to rotate freely (portrait +
+        // landscape) instead of the manifest's forced landscape used for video.
+        if (itemKind == BaseItemKind.AUDIO_BOOK.serialName) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
 
         binding = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
