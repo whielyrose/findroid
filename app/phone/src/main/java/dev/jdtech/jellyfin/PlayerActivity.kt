@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin
 import android.app.AppOpsManager
 import android.app.PictureInPictureParams
 import android.content.Intent
+import androidx.core.content.ContextCompat
 import android.content.pm.ActivityInfo
 import org.jellyfin.sdk.model.api.BaseItemKind
 import android.content.pm.PackageManager
@@ -336,6 +337,14 @@ class PlayerActivity : BasePlayerActivity() {
             itemKind = itemKind ?: "",
             startFromBeginning = startFromBeginning,
         )
+
+        // For audiobooks, start the foreground MediaSessionService so playback has a
+        // media notification and survives fully leaving the app. Video never starts it.
+        if (itemKind == BaseItemKind.AUDIO_BOOK.serialName) {
+            val serviceIntent = Intent(this, AudiobookPlaybackService::class.java)
+            ContextCompat.startForegroundService(this, serviceIntent)
+        }
+
         hideSystemUI()
     }
 

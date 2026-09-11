@@ -24,6 +24,7 @@ import dev.jdtech.jellyfin.player.core.domain.models.PlayerItem
 import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.domain.PlaylistManager
+import dev.jdtech.jellyfin.player.local.domain.PlayerHolder
 import dev.jdtech.jellyfin.player.local.mpv.MPVPlayer
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
@@ -54,6 +55,7 @@ constructor(
     private val repository: JellyfinRepository,
     private val appPreferences: AppPreferences,
     private val savedStateHandle: SavedStateHandle,
+    private val playerHolder: PlayerHolder,
 ) : ViewModel(), Player.Listener {
     val player: Player
 
@@ -173,6 +175,10 @@ constructor(
 
             else -> throw RuntimeException("$playerBackend is not a valid player backend")
         }
+
+        // Share this player with the audiobook MediaSessionService (audiobooks only
+        // read it; video never touches the holder). See PlayerHolder.
+        playerHolder.register(player)
     }
 
     fun initializePlayer(itemId: UUID, itemKind: String, startFromBeginning: Boolean) {
@@ -275,6 +281,7 @@ constructor(
         playbackPosition = 0L
         currentMediaItemIndex = 0
         player.removeListener(this)
+        playerHolder.clear()
         player.release()
     }
 

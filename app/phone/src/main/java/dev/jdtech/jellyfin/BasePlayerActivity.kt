@@ -26,9 +26,11 @@ abstract class BasePlayerActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        // Reuse an existing session (kept alive for audiobook background playback)
-        // instead of creating a duplicate.
-        if (mediaSession == null) {
+        // Audiobooks: the AudiobookPlaybackService owns the MediaSession (for the media
+        // notification + background survival). The activity must NOT create its own
+        // session for audiobooks, or two sessions would wrap the same player and conflict.
+        // Video: create the activity-owned session exactly as before.
+        if (!viewModel.isAudiobook && mediaSession == null) {
             mediaSession = MediaSession.Builder(this, viewModel.player).build()
         }
     }
@@ -63,8 +65,8 @@ abstract class BasePlayerActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
 
-        // For audiobooks, keep the MediaSession alive so playback continues in the
-        // background with lock-screen controls. For video, release as normal.
+        // Only video uses an activity-owned session; release it as before.
+        // Audiobooks never create one here (the service owns theirs), so nothing to do.
         if (!viewModel.isAudiobook) {
             mediaSession?.release()
             mediaSession = null
