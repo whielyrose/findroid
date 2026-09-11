@@ -42,6 +42,12 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     items = listOf(movie)
                     movie
                 }
+                BaseItemKind.AUDIO_BOOK -> {
+                    val audiobook = repository.getAudiobook(itemId)
+
+                    items = listOf(audiobook)
+                    audiobook
+                }
                 BaseItemKind.SERIES -> {
                     val nextUpEpisode = repository.getNextUp(itemId).firstOrNull()
 

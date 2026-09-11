@@ -37,6 +37,9 @@ import dev.jdtech.jellyfin.models.FindroidCollection
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidFolder
 import dev.jdtech.jellyfin.models.FindroidItem
+import android.content.Intent
+import dev.jdtech.jellyfin.models.FindroidAudiobook
+import org.jellyfin.sdk.model.api.BaseItemKind
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidShow
@@ -501,6 +504,14 @@ private fun navigateToItem(navController: NavHostController, item: FindroidItem)
                     libraryType = CollectionType.Folders,
                 )
             )
+        is FindroidAudiobook -> {
+            val context = navController.context
+            val intent = Intent(context, PlayerActivity::class.java)
+            intent.putExtra("itemId", item.id.toString())
+            intent.putExtra("itemKind", BaseItemKind.AUDIO_BOOK.serialName)
+            intent.putExtra("startFromBeginning", false)
+            context.startActivity(intent)
+        }
         else -> Unit
     }
 }
