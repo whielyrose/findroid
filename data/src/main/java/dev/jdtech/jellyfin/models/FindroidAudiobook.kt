@@ -36,6 +36,7 @@ data class FindroidAudiobook(
     override val unplayedItemCount: Int? = null,
     override val images: FindroidImages,
     override val chapters: List<FindroidChapter>,
+    override val trickplayInfo: Map<String, FindroidTrickplayInfo>? = null,
 ) : FindroidItem, FindroidSources
 
 suspend fun BaseItemDto.toFindroidAudiobook(
@@ -66,5 +67,6 @@ suspend fun BaseItemDto.toFindroidAudiobook(
         productionYear = productionYear,
         images = toFindroidImages(jellyfinRepository),
         chapters = toFindroidChapters(),
+        trickplayInfo = null,
     )
 }
