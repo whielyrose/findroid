@@ -1,11 +1,11 @@
 package dev.jdtech.jellyfin
 
+import android.Manifest
 import android.app.AppOpsManager
 import android.app.PictureInPictureParams
+import android.content.ComponentName
 import android.content.Intent
-import androidx.core.content.ContextCompat
 import android.content.pm.ActivityInfo
-import org.jellyfin.sdk.model.api.BaseItemKind
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -26,14 +26,16 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Space
 import android.widget.TextView
-import androidx.activity.viewModels
-import android.Manifest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.C
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import androidx.media3.ui.DefaultTimeBar
 import androidx.media3.ui.PlayerControlView
 import androidx.media3.ui.PlayerView
@@ -50,6 +52,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jellyfin.sdk.model.api.BaseItemKind
 import timber.log.Timber
 
 var isControlsLocked: Boolean = false
@@ -65,6 +68,8 @@ class PlayerActivity : BasePlayerActivity() {
 
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
+
+    private var mediaController: MediaController? = null
     private var previewScrubListener: PreviewScrubListener? = null
     private var wasZoom: Boolean = false
     private var skipButtonTimeoutExpired: Boolean = true
@@ -351,9 +356,26 @@ class PlayerActivity : BasePlayerActivity() {
             ensureNotificationPermission()
             val serviceIntent = Intent(this, AudiobookPlaybackService::class.java)
             ContextCompat.startForegroundService(this, serviceIntent)
+            connectMediaController()
         }
 
         hideSystemUI()
+    }
+
+    private fun connectMediaController() {
+        val token =
+            SessionToken(this, ComponentName(this, AudiobookPlaybackService::class.java))
+        val future = MediaController.Builder(this, token).buildAsync()
+        future.addListener(
+            { mediaController = future.get() },
+            ContextCompat.getMainExecutor(this),
+        )
+    }
+
+    override fun onDestroy() {
+        mediaController?.release()
+        mediaController = null
+        super.onDestroy()
     }
 
     private fun ensureNotificationPermission() {
