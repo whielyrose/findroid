@@ -8,6 +8,10 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/jarnedemeulemeester/findroid/total?style=for-the-badge)
 ![GitHub](https://img.shields.io/github/license/jarnedemeulemeester/findroid?style=for-the-badge)
 
+> [!TIP]
+> ## 🎧 Audiobook Edition — a fork of Findroid
+> This is a fork of [Findroid](https://github.com/jarnedemeulemeester/findroid) by [jarnedemeulemeester](https://github.com/jarnedemeulemeester), adding **audiobook support** for Jellyfin (browse, play, resume, chapters, background playback with notification controls, and a "Continue Listening" row). All original movie & TV functionality is unchanged. Please support and star the [upstream project](https://github.com/jarnedemeulemeester/findroid).
+
 Findroid is third-party Android application for Jellyfin that provides a native user interface to browse and play movies and series.
 
 I am developing this application in my spare time.
